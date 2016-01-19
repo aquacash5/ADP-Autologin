@@ -1,16 +1,17 @@
+import os
+import sys
 import json
 import time
 import datetime
-from sys import argv
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 
 times = {}
 last = ''
-if len(argv) < 2:
-    argv.append('config.json')
+if len(sys.argv) < 2:
+    sys.argv.append('config.json')
 while True:
-    with open(argv[1]) as fp:
+    with open(sys.argv[1]) as fp:
         data = json.load(fp)
     now = datetime.datetime.now()
     if now.strftime('%Y-%m-%d') not in data['vacations'] \
@@ -23,19 +24,33 @@ while True:
             elem = driver.find_element_by_id('txtClientName')
             elem.send_keys(data['clientname'])
             elem.send_keys(Keys.ENTER)
-        elem = driver.find_element_by_id('txtUserID')
-        elem.send_keys(data['username'])
-        elem = driver.find_element_by_id('txtPassword')
-        elem.send_keys(data['password'])
-        elem.send_keys(Keys.ENTER)
-        if data['times'][now.strftime('%H:%M')] == 'in':
-            elem = driver.find_element_by_class_name('btnClockIn_1')
-            elem.click()
-        elif data['times'][now.strftime('%H:%M')] == 'out':
-            elem = driver.find_element_by_class_name('btnClockOut_1')
-            elem.click()
+        if 'Login' in driver.title:
+            elem = driver.find_element_by_id('txtUserID')
+            elem.send_keys(data['username'])
+            elem = driver.find_element_by_id('txtPassword')
+            elem.send_keys(data['password'])
+            elem.send_keys(Keys.ENTER)
+            if 'Home' in driver.title:
+                if data['times'][now.strftime('%H:%M')] == 'in':
+                    try:
+                        elem = driver.find_element_by_class_name('btnClockIn_1')
+                        elem.click()
+                        sys.stdout.write('{0}\tClockIn\tSuccess\tOK'.format(now) + os.linesep)
+                    except Exception as e:
+                        sys.stderr.write('{0}\tClockIn\tError\t{1}'.format(now, str(e)))
+                elif data['times'][now.strftime('%H:%M')] == 'out':
+                    try:
+                        elem = driver.find_element_by_class_name('btnClockOut_1')
+                        elem.click()
+                        sys.stdout.write('{0}\tClockIn\tSuccess\tOK'.format(now) + os.linesep)
+                    except Exception as e:
+                        sys.stderr.write('{0}\tClockOut\tError\t{1}'.format(now, str(e)) + os.linesep)
+                else:
+                    print('No Command Sent')
+                last = now.strftime('%H:%M')
+            else:
+                sys.stderr.write('{0}\tLogin\tError\tCould not login to ezLaborManager')
         else:
-            print('No Command Sent')
-        last = now.strftime('%H:%M')
+            sys.stderr.write('{0}\tClientLogin\tError\tCould not login to ezLaborManager'.format(now))
         driver.close()
     time.sleep(30)
