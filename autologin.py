@@ -42,7 +42,7 @@ while True:
                     try:
                         elem = driver.find_element_by_class_name('btnClockOut_1')
                         elem.click()
-                        sys.stdout.write('{0}\tClockIn\tSuccess\tOK'.format(now) + os.linesep)
+                        sys.stdout.write('{0}\tClockOut\tSuccess\tOK'.format(now) + os.linesep)
                     except Exception as e:
                         sys.stderr.write('{0}\tClockOut\tError\t{1}'.format(now, str(e)) + os.linesep)
                 else:
