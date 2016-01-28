@@ -41,7 +41,7 @@ while True:
                         elem.click()
                         sys.stdout.write('{0}\tClockIn\tSuccess\tOK'.format(now) + os.linesep)
                     except Exception as e:
-                        sys.stderr.write('{0}\tClockIn\tError\t{1}'.format(now, str(e)))
+                        sys.stderr.write('{0}\tClockIn\tError\t{1}'.format(now, str(e)) + os.linesep)
                 elif data['times'][now.strftime('%H:%M')] == 'out':
                     try:
                         elem = driver.find_element_by_class_name('btnClockOut_1')
@@ -54,8 +54,8 @@ while True:
                 OFFSET = random.randint(int(data['randomoffset']) * -1, int(data['randomoffset']))
                 last = now.strftime('%H:%M')
             else:
-                sys.stderr.write('{0}\tLogin\tError\tCould not login to ezLaborManager')
+                sys.stderr.write('{0}\tLogin\tError\tCould not login to ezLaborManager' + os.linesep)
         else:
-            sys.stderr.write('{0}\tClientLogin\tError\tCould not login to ezLaborManager'.format(now))
+            sys.stderr.write('{0}\tClientLogin\tError\tCould not login to ezLaborManager'.format(now) + os.linesep)
         driver.close()
     time.sleep(30)
