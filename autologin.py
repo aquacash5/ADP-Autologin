@@ -13,7 +13,7 @@ if len(sys.argv) < 2:
     sys.argv.append('config.json')
 with open(sys.argv[1]) as fp:
     data = json.load(fp)
-OFFSET = random.randint(0, int(data['randomoffset']) * 2) - int(data['randomoffset'])
+OFFSET = random.randint(int(data['randomoffset']) * -1, int(data['randomoffset']))
 while True:
     with open(sys.argv[1]) as fp:
         data = json.load(fp)
@@ -51,7 +51,7 @@ while True:
                         sys.stderr.write('{0}\tClockOut\tError\t{1}'.format(now, str(e)) + os.linesep)
                 else:
                     print('No Command Sent')
-                OFFSET = random.randint(0, int(data['randomoffset']) * 2) - int(data['randomoffset'])
+                OFFSET = random.randint(int(data['randomoffset']) * -1, int(data['randomoffset']))
                 last = now.strftime('%H:%M')
             else:
                 sys.stderr.write('{0}\tLogin\tError\tCould not login to ezLaborManager')
