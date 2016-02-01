@@ -9,6 +9,7 @@ from selenium.webdriver.common.keys import Keys
 
 times = {}
 last = ''
+sys.stdout.write('Started.')##just so we know it is running.
 if len(sys.argv) < 2:
     sys.argv.append('config.json')
 with open(sys.argv[1]) as fp:
