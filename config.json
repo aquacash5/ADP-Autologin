@@ -23,7 +23,12 @@
     "07:00": "in",
     "12:00": "out",
     "13:00": "in",
-    "16:00": "out"
+    "16:00": "out",
+    "11:58": ""
   },
-  "randomoffset": 3
+  "randomoffset": 3,
+  "logging": {
+    "format": "%(asctime)s %(levelname)s %(message)s",
+    "level": "INFO"
+  }
 }
