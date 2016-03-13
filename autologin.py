@@ -38,8 +38,7 @@ if __name__ == '__main__':
         if now.strftime('%Y-%m-%d') not in data['vacations'] \
                 and now.strftime('%A') in data['workdays'] \
                 and now.strftime('%H:%M') in data['times'] \
-                and now.strftime('%H:%M') != last\
-                or True:
+                and now.strftime('%H:%M') != last:
             driver = webdriver.Firefox()
             driver.get("https://ezlmappdc1f.adp.com/ezLaborManagerNet/Login/Login.aspx")  # Goes to Client Login page
             if ' - Client Login' in driver.title:
