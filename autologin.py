@@ -22,7 +22,7 @@ if __name__ == '__main__':
     try:
         with open(args.config) as fp:
             data = json.load(fp)
-    except Exception as e:
+    except Exception:
         stderr.write('Error Reading Config' + linesep)
         exit(1)
     logging.basicConfig(**data['logging'])
