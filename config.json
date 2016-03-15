@@ -1,33 +1,18 @@
 {
-  "clientname": "",
-  "username": "",
-  "password": "",
-  "vacations": [
-    "2016-01-01",
-    "2016-05-30",
-    "2016-07-04",
-    "2016-09-05",
-    "2016-11-24",
-    "2016-11-25",
-    "2016-12-23",
-    "2016-12-26"
-  ],
-  "workdays": [
-    "Monday",
-    "Tuesday",
-    "Wednesday",
-    "Thursday",
-    "Friday"
-  ],
-  "times": {
-    "07:00": "in",
-    "12:00": "out",
-    "13:00": "in",
-    "16:00": "out"
-  },
-  "randomoffset": 3,
-  "logging": {
-    "format": "%(asctime)s %(levelname)s %(message)s",
-    "level": "INFO"
-  }
+	"clientname" : "",
+	"username" : "",
+	"password" : "",
+	"vacations" : ["2016-01-01", "2016-05-30", "2016-07-04", "2016-09-05", "2016-11-24", "2016-11-25", "2016-12-23", "2016-12-26"],
+	"workdays" : ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+	"times" : {
+		"07:00" : "in",
+		"12:00" : "out",
+		"13:00" : "in",
+		"16:00" : "out"
+	},
+	"randomoffset" : 3,
+	"logging" : {
+		"format" : "%(asctime)s %(levelname)s %(message)s",
+		"level" : "INFO"
+	}
 }
