@@ -20,20 +20,20 @@ if __name__ == '__main__':
     args = parser.parse_args()
     data = {}
     try:
-        with open(args.config) as fp:
+        with open(args.config, 'r') as fp:
             data = json.load(fp)
-    except Exception:
-        stderr.write('Error Reading Config' + linesep)
+    except Exception as e:
+        stderr.write('Error Reading Config: ' + str(e) + linesep)
         exit(1)
     logging.basicConfig(**data['logging'])
     OFFSET = random.randint(int(data['randomoffset']) * -1,
                             int(data['randomoffset']))  # Calculates Offset for login time
     while True:
-        with open(args.config) as fp:
-            try:
+        try:
+            with open(args.config, 'r') as fp:
                 data = json.load(fp)
-            except Exception as e:
-                logging.error('JSON: %s', str(e))
+        except Exception as e:
+            logging.error('JSON: %s', str(e))
         now = datetime.datetime.now() + datetime.timedelta(minutes=OFFSET)  # Gets current date and applies offset
         if now.strftime('%Y-%m-%d') not in data['vacations'] \
                 and now.strftime('%A') in data['workdays'] \
