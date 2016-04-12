@@ -9,6 +9,7 @@ from sys import stderr
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 
+
 if __name__ == '__main__':
     times = {}
     last = ''
@@ -28,6 +29,10 @@ if __name__ == '__main__':
     logging.basicConfig(**data['logging'])
     OFFSET = random.randint(int(data['randomoffset']) * -1,
                             int(data['randomoffset']))  # Calculates Offset for login time
+    if data['browser'] == 'CHROME':
+        driver = webdriver.Chrome('./chromedriver')
+    else:
+        driver = webdriver.Firefox()
     while True:
         try:
             with open(args.config, 'r') as fp:
@@ -39,7 +44,6 @@ if __name__ == '__main__':
                 and now.strftime('%A') in data['workdays'] \
                 and now.strftime('%H:%M') in data['times'] \
                 and now.strftime('%H:%M') != last:
-            driver = webdriver.Firefox()
             driver.get("https://ezlmappdc1f.adp.com/ezLaborManagerNet/Login/Login.aspx")  # Goes to Client Login page
             if ' - Client Login' in driver.title:
                 logging.debug('Logging into client')
