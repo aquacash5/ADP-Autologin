@@ -27,12 +27,10 @@ if __name__ == '__main__':
         stderr.write('Error Reading Config: ' + str(e) + linesep)
         exit(1)
     logging.basicConfig(**data['logging'])
+    logging.info('Config Read Successfully')
     OFFSET = random.randint(int(data['randomoffset']) * -1,
                             int(data['randomoffset']))  # Calculates Offset for login time
-    if data['browser'] == 'CHROME':
-        driver = webdriver.Chrome('./chromedriver')
-    else:
-        driver = webdriver.Firefox()
+    logging.info('Random Offset: %s', OFFSET)
     while True:
         try:
             with open(args.config, 'r') as fp:
@@ -44,6 +42,10 @@ if __name__ == '__main__':
                 and now.strftime('%A') in data['workdays'] \
                 and now.strftime('%H:%M') in data['times'] \
                 and now.strftime('%H:%M') != last:
+            if data['browser'] == 'CHROME':
+                driver = webdriver.Chrome('./chromedriver')
+            else:
+                driver = webdriver.Firefox()
             driver.get("https://ezlmappdc1f.adp.com/ezLaborManagerNet/Login/Login.aspx")  # Goes to Client Login page
             if ' - Client Login' in driver.title:
                 logging.debug('Logging into client')
@@ -80,10 +82,11 @@ if __name__ == '__main__':
                         logging.warning('No Command Set')
                     OFFSET = random.randint(int(data['randomoffset']) * -1,
                                             int(data['randomoffset']))
+                    logging.info('Random Offset: %s', OFFSET)
                     last = now.strftime('%H:%M')
                 else:
                     logging.error('Login: %s', 'Could not login to user')
             else:
                 logging.error('ClientLogin: %s', 'Could not login to client')
             driver.close()
-        time.sleep(5)
+        time.sleep(.01)
