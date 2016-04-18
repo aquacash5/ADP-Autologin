@@ -1,13 +1,43 @@
+import os
 import json
 import time
 import random
 import logging
+import zipfile
 import datetime
+import requests
 import argparse
+import subprocess
 from os import linesep
 from sys import stderr
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
+
+
+def get_chrome_driver():
+    version = '0.0'
+    if os.path.exists('./chromedriver.exe'):
+        p = subprocess.Popen(['./chromedriver.exe', '--version'], stdout=subprocess.PIPE)
+        p.wait()
+        version = p.stdout.read().strip().decode("utf-8").split(' ')[1]
+    response = requests.get('http://chromedriver.storage.googleapis.com/LATEST_RELEASE')
+    latest = response.content.strip().decode("utf-8")
+    if version < latest:
+        try:
+            os.remove('./chromedriver.exe')
+        except Exception:
+            pass
+        url = '/'.join(['http://chromedriver.storage.googleapis.com', latest, 'chromedriver_win32.zip'])
+        response = requests.get(url)
+        try:
+            with open('chromedriver.zip', 'wb') as zipper:
+                for chunk in response.iter_content(chunk_size=1024):
+                    if chunk:
+                        zipper.write(chunk)
+            with zipfile.ZipFile('chromedriver.zip') as zipper:
+                zipper.extractall('.')
+        finally:
+            os.remove('chromedriver.zip')
 
 
 if __name__ == '__main__':
@@ -43,6 +73,7 @@ if __name__ == '__main__':
                 and now.strftime('%H:%M') in data['times'] \
                 and now.strftime('%H:%M') != last:
             if data['browser'] == 'CHROME':
+                get_chrome_driver()
                 driver = webdriver.Chrome('./chromedriver')
             else:
                 driver = webdriver.Firefox()
