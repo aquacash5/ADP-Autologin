@@ -36,6 +36,7 @@ def get_chrome_driver():
                         zipper.write(chunk)
             with zipfile.ZipFile('chromedriver.zip') as zipper:
                 zipper.extractall('.')
+            logging.info('Downloaded ChromeDriver v%s', latest)
         finally:
             os.remove('chromedriver.zip')
 
