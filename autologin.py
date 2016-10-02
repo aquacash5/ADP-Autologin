@@ -78,36 +78,53 @@ if __name__ == '__main__':
                 driver = webdriver.Chrome('./chromedriver')
             else:
                 driver = webdriver.Firefox()
-            driver.get("https://ezlmappdc1f.adp.com/ezLaborManagerNet/Login/Login.aspx")  # Goes to Client Login page
-            if ' - Client Login' in driver.title:
-                logging.debug('Logging into client')
-                elem = driver.find_element_by_id('txtClientName')
-                elem.send_keys(data['clientname'])
-                elem.send_keys(Keys.ENTER)
-            if ' - Login' in driver.title:
-                elem = driver.find_element_by_xpath('//*[@id="lblClientName"]')
-                logging.debug('Client: %s', elem.text)
+            driver.get("https://workforcenow.adp.com/public/index.htm")  # Goes to Client Login page
+            # if 'ADP' in driver.title:
+            # logging.debug('Logging into client')
+            # elem = driver.find_element_by_id('txtClientName')
+            # elem.send_keys(data['clientname'])
+            # elem.send_keys(Keys.ENTER)
+            if 'ADP' in driver.title:
+                # elem = driver.find_element_by_xpath('//*[@id="lblClientName"]')
+                # logging.debug('Client: %s', elem.text)
                 logging.debug('Logging into user')
-                elem = driver.find_element_by_id('txtUserID')
+                elem = driver.find_element_by_name('USER')
                 elem.send_keys(data['username'])
-                elem = driver.find_element_by_id('txtPassword')
+                elem = driver.find_element_by_name('PASSWORD')
                 elem.send_keys(data['password'])
                 elem.send_keys(Keys.ENTER)
-                if 'Home' in driver.title:
-                    elem = driver.find_element_by_xpath('//*[@id="lblName"]')
+                if driver.find_element_by_id('Myself_navItem_label').is_displayed():
+                    elem = driver.find_element_by_xpath('//*[@id="mastheadGlobalOptions_label"]')
                     logging.debug('User: %s', elem.text)
+                    # Going through drop-down menu selenium doesn't like clicking hidden elements
+                    elem = driver.find_element_by_xpath('//*[@id="Myself_navItem"]')
+                    elem.click()
+                    elem = driver.find_element_by_xpath('//*[@id="revit_layout_TabContainer_1_tablist_dijit_layout_ContentPane_4"]/span[2]/span')
+                    elem.click()
+                    elem = driver.find_element_by_xpath('//*[@id="Myself_ttd_MyselfTabTimecardsAttendanceSchCategoryMyTimeEntry"]')
+                    elem.click()
                     if data['times'][now.strftime('%H:%M')] == 'in':
                         try:
-                            elem = driver.find_element_by_class_name('btnClockIn_1')
-                            elem.click()
-                            logging.info('ClockIn: OK')
+                            for _ in range(10):
+                                elem = driver.find_element_by_xpath('//*[@id="revit_form_Button_1"]/input')
+                                if elem:
+                                    # elem.click()
+                                    logging.info('ClockIn: OK')
+                                    break
+                                else:
+                                    time.sleep(.5)
                         except Exception as e:
                             logging.error('ClockIn: %s', str(e))
                     elif data['times'][now.strftime('%H:%M')] == 'out':
                         try:
-                            elem = driver.find_element_by_class_name('btnClockOut_1')
-                            elem.click()
-                            logging.info('ClockOut: OK')
+                            for _ in range(10):
+                                elem = driver.find_element_by_xpath('//*[@id="revit_form_Button_0"]/input')
+                                if elem:
+                                    # elem.click()
+                                    logging.info('ClockOut: OK')
+                                    break
+                                else:
+                                    time.sleep(.5)
                         except Exception as e:
                             logging.error('ClockOut: %s', str(e))
                     else:
