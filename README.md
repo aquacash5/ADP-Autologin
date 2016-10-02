@@ -1,16 +1,20 @@
 # ADP-Autologin
+
 Automatically Log in and out of ADP's ezLaborManager
 
 ## Parameters
+
 Positional Arguments:
 
--- | --
-config | Config file (default: config.json)
+| Option | Description                        |
+| ------ | ---------------------------------- |
+| config | Config file (default: config.json) |
 
 Optional Arguments:
 
--- | --
--h, --help | show help message
+| Option     | Description       |
+| ---------- | ----------------- |
+| -h, --help | show help message |
 
 ## License
 Copyright (c) 2016, Kyle Bloom
