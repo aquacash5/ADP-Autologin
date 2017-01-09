@@ -27,7 +27,11 @@ def get_chrome_driver():
             os.remove('./chromedriver.exe')
         except Exception:
             pass
-        url = '/'.join(['http://chromedriver.storage.googleapis.com', latest, 'chromedriver_win32.zip'])
+        url = '/'.join([
+            'http://chromedriver.storage.googleapis.com',
+            latest,
+            'chromedriver_win32.zip'
+        ])
         response = requests.get(url)
         try:
             with open('chromedriver.zip', 'wb') as zipper:
@@ -68,7 +72,8 @@ if __name__ == '__main__':
                 data = json.load(fp)
         except Exception as e:
             logging.error('JSON: %s', str(e))
-        now = datetime.datetime.now() + datetime.timedelta(minutes=OFFSET)  # Gets current date and applies offset
+        # Gets current date and applies offset
+        now = datetime.datetime.now() + datetime.timedelta(minutes=OFFSET)
         if now.strftime('%Y-%m-%d') not in data['vacations'] \
                 and now.strftime('%A') in data['workdays'] \
                 and now.strftime('%H:%M') in data['times'] \
@@ -78,15 +83,9 @@ if __name__ == '__main__':
                 driver = webdriver.Chrome('./chromedriver')
             else:
                 driver = webdriver.Firefox()
-            driver.get("https://workforcenow.adp.com/public/index.htm")  # Goes to Client Login page
-            # if 'ADP' in driver.title:
-            # logging.debug('Logging into client')
-            # elem = driver.find_element_by_id('txtClientName')
-            # elem.send_keys(data['clientname'])
-            # elem.send_keys(Keys.ENTER)
+            # Goes to Client Login page
+            driver.get("https://workforcenow.adp.com/public/index.htm")
             if 'ADP' in driver.title:
-                # elem = driver.find_element_by_xpath('//*[@id="lblClientName"]')
-                # logging.debug('Client: %s', elem.text)
                 logging.debug('Logging into user')
                 elem = driver.find_element_by_name('USER')
                 elem.send_keys(data['username'])
@@ -106,25 +105,42 @@ if __name__ == '__main__':
                     if data['times'][now.strftime('%H:%M')] == 'in':
                         try:
                             for _ in range(10):
-                                elem = driver.find_element_by_xpath('//*[@id="revit_form_Button_1"]/input')
-                                if elem:
-                                    # elem.click()
-                                    logging.info('ClockIn: OK')
+                                try:
+                                    driver.switch_to.frame('eZlmIFrame_iframe')
                                     break
-                                else:
-                                    time.sleep(.5)
+                                except Exception:
+                                    time.sleep(1)
+                            for _ in range(10):
+                                try:
+                                    elem = driver.find_element_by_xpath('//*[@id="revit_form_ComboButton_0_button"]/span[1]')
+                                    if elem and elem.is_displayed():
+                                        elem.click()
+                                        logging.info('ClockIn: OK')
+                                        break
+                                    else:
+                                        time.sleep(1)
+                                except Exception:
+                                    time.sleep(1)
                         except Exception as e:
                             logging.error('ClockIn: %s', str(e))
                     elif data['times'][now.strftime('%H:%M')] == 'out':
                         try:
                             for _ in range(10):
-                                elem = driver.find_element_by_xpath('//*[@id="revit_form_Button_0"]/input')
-                                if elem:
-                                    # elem.click()
-                                    logging.info('ClockOut: OK')
-                                    break
-                                else:
-                                    time.sleep(.5)
+                                try:
+                                    driver.switch_to.frame('eZlmIFrame_iframe')
+                                except Exception:
+                                    time.sleep(1)
+                            for _ in range(30):
+                                try:
+                                    elem = driver.find_element_by_xpath('//*[@id="revit_form_ComboButton_1_button"]/span[1]')
+                                    if elem:
+                                        # elem.click()
+                                        logging.info('ClockOut: OK')
+                                        break
+                                    else:
+                                        time.sleep(1)
+                                except Exception:
+                                    time.sleep(1)
                         except Exception as e:
                             logging.error('ClockOut: %s', str(e))
                     else:
