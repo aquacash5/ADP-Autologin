@@ -1,16 +1,20 @@
-import os
-import json
-import time
-import random
-import logging
-import zipfile
-import datetime
-import requests
 import argparse
+import datetime
+import json
+import logging
+import os
+import random
 import subprocess
+import time
+import zipfile
 from os import linesep
 from sys import stderr
+
+import requests
 from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
 
 
@@ -43,6 +47,18 @@ def get_chrome_driver():
             logging.info('Downloaded ChromeDriver v%s', latest)
         finally:
             os.remove('chromedriver.zip')
+
+
+def find_element_xpath(driver, xpath, timeout=10):
+    return WebDriverWait(driver, timeout).until(
+        EC.presence_of_element_located((By.XPATH, xpath))
+    )
+
+
+def find_element_name(driver, name, timeout=10):
+    return WebDriverWait(driver, timeout).until(
+        EC.presence_of_element_located((By.NAME, name))
+    )
 
 
 if __name__ == '__main__':
@@ -87,60 +103,40 @@ if __name__ == '__main__':
             driver.get("https://workforcenow.adp.com/public/index.htm")
             if 'ADP' in driver.title:
                 logging.debug('Logging into user')
-                elem = driver.find_element_by_name('USER')
+                elem = find_element_name(driver, 'USER')
                 elem.send_keys(data['username'])
-                elem = driver.find_element_by_name('PASSWORD')
+                elem = find_element_name(driver, 'PASSWORD')
                 elem.send_keys(data['password'])
                 elem.send_keys(Keys.ENTER)
                 if driver.find_element_by_id('Myself_navItem_label').is_displayed():
-                    elem = driver.find_element_by_xpath('//*[@id="mastheadGlobalOptions_label"]')
+                    elem = find_element_xpath(
+                        driver,
+                        '//*[@id="mastheadGlobalOptions_label"]'
+                    )
                     logging.debug('User: %s', elem.text)
-                    # Going through drop-down menu selenium doesn't like clicking hidden elements
-                    elem = driver.find_element_by_xpath('//*[@id="Myself_navItem"]')
-                    elem.click()
-                    elem = driver.find_element_by_xpath('//*[@id="revit_layout_TabContainer_1_tablist_dijit_layout_ContentPane_4"]/span[2]/span')
-                    elem.click()
-                    elem = driver.find_element_by_xpath('//*[@id="Myself_ttd_MyselfTabTimecardsAttendanceSchCategoryMyTimeEntry"]')
-                    elem.click()
+                    driver.get(
+                        "https://workforcenow.adp.com/portal/theme#/Myself_ttd_MyselfTabTimecardsAttendanceSchCategoryMyTimeEntry/MyselfTabTimecardsAttendanceSchCategoryMyTimeEntry"
+                    )
+                    find_element_name(driver, 'eZlmIFrame_iframe')
+                    driver.switch_to.frame('eZlmIFrame_iframe')
                     if data['times'][now.strftime('%H:%M')] == 'in':
                         try:
-                            for _ in range(10):
-                                try:
-                                    driver.switch_to.frame('eZlmIFrame_iframe')
-                                    break
-                                except Exception:
-                                    time.sleep(1)
-                            for _ in range(10):
-                                try:
-                                    elem = driver.find_element_by_xpath('//*[@id="revit_form_ComboButton_0_button"]/span[1]')
-                                    if elem and elem.is_displayed():
-                                        elem.click()
-                                        logging.info('ClockIn: OK')
-                                        break
-                                    else:
-                                        time.sleep(1)
-                                except Exception:
-                                    time.sleep(1)
+                            elem = find_element_xpath(
+                                driver,
+                                '//*[@id="revit_form_ComboButton_0_button"]/span[1]'
+                            )
+                            elem.click()
+                            logging.info('ClockIn: OK')
                         except Exception as e:
                             logging.error('ClockIn: %s', str(e))
                     elif data['times'][now.strftime('%H:%M')] == 'out':
                         try:
-                            for _ in range(10):
-                                try:
-                                    driver.switch_to.frame('eZlmIFrame_iframe')
-                                except Exception:
-                                    time.sleep(1)
-                            for _ in range(30):
-                                try:
-                                    elem = driver.find_element_by_xpath('//*[@id="revit_form_ComboButton_1_button"]/span[1]')
-                                    if elem:
-                                        # elem.click()
-                                        logging.info('ClockOut: OK')
-                                        break
-                                    else:
-                                        time.sleep(1)
-                                except Exception:
-                                    time.sleep(1)
+                            elem = find_element_xpath(
+                                driver,
+                                '//*[@id="revit_form_ComboButton_1_button"]/span[1]'
+                            )
+                            elem.click()
+                            logging.info('ClockOut: OK')
                         except Exception as e:
                             logging.error('ClockOut: %s', str(e))
                     else:
