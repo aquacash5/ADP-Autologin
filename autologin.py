@@ -149,5 +149,6 @@ if __name__ == '__main__':
                     logging.error('Login: %s', 'Could not login to user')
             else:
                 logging.error('ClientLogin: %s', 'Could not login to client')
+            time.sleep(5)
             driver.close()
         time.sleep(.01)
