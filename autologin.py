@@ -6,6 +6,7 @@ import os
 import random
 import subprocess
 import time
+import hashlib
 import zipfile
 from sys import stderr
 
@@ -17,6 +18,15 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
 
+CLOCK_IN_BUTTON = '/html/body/div/app/ng-component/redbox-container/div[6]/div[2]/div[2]/div/div/dashboard-container/div/espresso-dashboard/espresso-tile[1]/div/div[2]/ng-include/div/div/div/div/time-punch-tile/div/div/div/div[2]/button[1]'
+CLOCK_OUT_BUTTON = '/html/body/div/app/ng-component/redbox-container/div[6]/div[2]/div[2]/div/div/dashboard-container/div/espresso-dashboard/espresso-tile[1]/div/div[2]/ng-include/div/div/div/div/time-punch-tile/div/div/div/div[2]/button[2]'
+
+log = logging.getLogger('adp')
+stream = logging.StreamHandler()
+formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
+stream.setFormatter(formatter)
+log.addHandler(stream)
+
 
 def get_chrome_driver():
     version = '0.0'
@@ -25,11 +35,11 @@ def get_chrome_driver():
             ['./chromedriver.exe', '--version'], stdout=subprocess.PIPE)
         p.wait()
         version = p.stdout.read().strip().decode('utf-8').split(' ')[1]
-    logging.debug('CHROME DRIVER VERSION: {}'.format(version))
+    log.debug('CHROME DRIVER VERSION: {}'.format(version))
     response = requests.get(
         'http://chromedriver.storage.googleapis.com/LATEST_RELEASE', timeout=5)
     latest = response.content.strip().decode('utf-8')
-    logging.debug('LATEST CHROME DRIVER VERSION: {}'.format(latest))
+    log.debug('LATEST CHROME DRIVER VERSION: {}'.format(latest))
     if version < latest:
         try:
             os.remove('./chromedriver.exe')
@@ -49,7 +59,7 @@ def get_chrome_driver():
                             zipper.write(chunk)
                 with zipfile.ZipFile('chromedriver.zip') as zipper:
                     zipper.extractall('.')
-                logging.info('Downloaded ChromeDriver v%s', latest)
+                log.info('Downloaded ChromeDriver v%s', latest)
             finally:
                 os.remove('chromedriver.zip')
         except requests.exceptions.Timeout:
@@ -68,6 +78,19 @@ def find_element_name(driver, name, timeout=10):
     )
 
 
+# noinspection PyProtectedMember
+def log_level(string):
+    return logging._nameToLevel.get(string, logging.INFO)
+
+
+def md5(fname):
+    hash_md5 = hashlib.md5()
+    with open(fname, "rb") as f:
+        for chunk in iter(lambda: f.read(4096), b""):
+            hash_md5.update(chunk)
+    return hash_md5.hexdigest()
+
+
 if __name__ == '__main__':
     times = {}
     last = ''
@@ -76,26 +99,45 @@ if __name__ == '__main__':
                         help='Config file (default: config.json)',
                         default='config.json',
                         nargs='?')
+    # noinspection PyProtectedMember
+    parser.add_argument('-l', '--log-level',
+                        help='Log Level ({}) [INFO]'.format(
+                            ', '.join(logging._nameToLevel)),
+                        type=log_level,
+                        default=logging.INFO)
     args = parser.parse_args()
+    log.setLevel(args.log_level)
     data = {}
+    config_hash = ''
     try:
         with open(args.config, 'r') as fp:
             data = json.load(fp)
     except Exception as e:
         print('Error Reading Config: {}'.format(e), file=stderr)
         exit(1)
-    logging.basicConfig(**data['logging'])
-    logging.info('Config Read Successfully')
+    log.debug('Initial Load Successful')
     # Calculates Offset for login time
     OFFSET = random.randint(int(data['randomoffset']) * -1,
                             int(data['randomoffset']))
-    logging.info('RANDOM OFFSET: %s', OFFSET)
+    log.debug('RANDOM OFFSET: %s', OFFSET)
     while True:
         try:
-            with open(args.config, 'r') as fp:
-                data = json.load(fp)
+            new_hash = md5(args.config)
+            if config_hash != new_hash:
+                with open(args.config, 'r') as fp:
+                    data = json.load(fp)
+                config_hash = new_hash
+                log.info("New Config!")
+                log.debug('CONFIG HASH:   {}'.format(config_hash))
+                log.debug('RANDOM OFFSET: {}'.format(data['randomoffset']))
+                log.debug('BROWSER:       {}'.format(data['browser']))
+                log.debug('WORKDAYS:      {}'.format(data['workdays']))
+                log.debug('VACATIONS:     {}'.format(data['vacations']))
+                log.debug('TIMES:         {}'.format(data['times']))
+                log.debug('USERNAME:      {}'.format(data['username']))
+                log.debug('PASSWORD:      {}'.format(data['password']))
         except Exception:
-            logging.exception('Reading JSON')
+            log.exception('Reading JSON')
         # Gets current date and applies offset
         now = datetime.datetime.now() + datetime.timedelta(minutes=OFFSET)
         if now.strftime('%Y-%m-%d') not in data['vacations'] \
@@ -115,75 +157,52 @@ if __name__ == '__main__':
                     else:
                         driver = webdriver.Firefox()
                 except Exception:
-                    logging.exception('Initialize Driver')
+                    log.exception('Initialize Driver')
                     continue
                 try:
                     # Goes to Client Login page
-                    driver.get('https://workforcenow.adp.com/public/index.htm')
+                    driver.get('https://my.adp.com/static/redbox/login.html')
                     if 'ADP' in driver.title:
-                        logging.debug('Logging into user')
-                        elem = find_element_name(driver, 'USER')
+                        log.debug('Logging into user')
+                        elem = find_element_xpath(driver, '//*[@id="user"]')
                         elem.send_keys(data['username'])
-                        elem = find_element_name(driver, 'PASSWORD')
+                        elem = find_element_xpath(driver, '//*[@id="password"]')
                         elem.send_keys(data['password'])
                         elem.send_keys(Keys.ENTER)
-                        if driver.find_element_by_id(
-                                'Myself_navItem_label').is_displayed():
-                            elem = find_element_xpath(
-                                driver,
-                                '//*[@id="mastheadGlobalOptions_label"]'
-                            )
-                            logging.debug('USER: %s', elem.text)
-                            driver.get(
-                                'https://workforcenow.adp.com/portal/theme#'
-                                '/Myself_ttd_MyselfTabTimecardsAttendanceSch'
-                                'CategoryMyTimeEntry/MyselfTabTimecards'
-                                'AttendanceSchCategoryMyTimeEntry'
-                            )
-                            find_element_name(driver, 'eZlmIFrame_iframe')
-                            driver.switch_to.frame('eZlmIFrame_iframe')
+                        if find_element_xpath(driver, CLOCK_IN_BUTTON, 30).is_displayed():
                             if data['times'][now.strftime('%H:%M')] == 'in':
                                 try:
-                                    elem = find_element_xpath(
-                                        driver,
-                                        '//*[@id="revit_form_'
-                                        'ComboButton_0_button"]/span[1]'
-                                    )
+                                    elem = find_element_xpath(driver, CLOCK_IN_BUTTON)
                                     elem.click()
-                                    logging.info('CLOCK IN: OK')
+                                    log.info('CLOCK IN: OK')
                                     finished = True
                                 except Exception:
-                                    logging.exception('CLOCK IN')
+                                    log.exception('CLOCK IN')
                             elif data['times'][now.strftime('%H:%M')] == 'out':
                                 try:
-                                    elem = find_element_xpath(
-                                        driver,
-                                        '//*[@id="revit_form_'
-                                        'ComboButton_1_button"]/span[1]'
-                                    )
+                                    elem = find_element_xpath(driver, CLOCK_OUT_BUTTON)
                                     elem.click()
-                                    logging.info('CLOCK OUT: OK')
+                                    log.info('CLOCK OUT: OK')
                                     finished = True
                                 except Exception:
-                                    logging.exception('CLOCK OUT')
+                                    log.exception('CLOCK OUT')
                             else:
-                                logging.warning('No Command Set')
+                                log.warning('No Command Set')
                                 finished = True
                             OFFSET = random.randint(
                                 int(data['randomoffset']) * -1,
                                 int(data['randomoffset'])
                             )
-                            logging.info('RANDOM OFFSET: %s', OFFSET)
+                            log.debug('RANDOM OFFSET: %s', OFFSET)
                             last = now.strftime('%H:%M')
                         else:
-                            logging.error('LOGIN: Could not login to user')
+                            log.error('LOGIN: Could not login to user')
                     else:
-                        logging.error(
-                            'CLIENT LOGIN: Could not login to client')
+                        log.error('CLIENT LOGIN: Could not login to client')
                 except Exception:
-                    logging.exception('Auto Login Error')
+                    log.exception('Auto Login Error')
                 finally:
                     driver.close()
                 time.sleep(2)
                 attempts += 1
-        time.sleep(.1)
+        time.sleep(5)

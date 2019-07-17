@@ -1,19 +1,31 @@
 {
-	"clientname" : "",
-	"username" : "",
-	"password" : "",
-	"vacations" : ["2016-01-01", "2016-05-30", "2016-07-04", "2016-09-05", "2016-11-24", "2016-11-25", "2016-12-23", "2016-12-26"],
-	"workdays" : ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
-	"times" : {
-		"07:00" : "in",
-		"12:00" : "out",
-		"13:00" : "in",
-		"16:00" : "out"
+	"clientname": "",
+	"username": "",
+	"password": "",
+	"vacations": [
+		"2019-09-02",
+		"2019-11-28",
+		"2019-11-29",
+		"2019-12-24",
+		"2019-12-25"
+	],
+	"workdays": [
+		"Monday",
+		"Tuesday",
+		"Wednesday",
+		"Thursday",
+		"Friday"
+	],
+	"times": {
+		"07:00": "in",
+		"12:00": "out",
+		"13:00": "in",
+		"16:00": "out"
 	},
-	"randomoffset" : 3,
-	"logging" : {
-		"format" : "%(asctime)s %(levelname)s %(message)s",
-		"level" : "INFO"
+	"randomoffset": 3,
+	"logging": {
+		"format": "%(asctime)s %(levelname)s %(message)s",
+		"level": "INFO"
 	},
-	"browser": ""
+	"browser": "FIREFOX"
 }
